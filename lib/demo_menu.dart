@@ -10,7 +10,8 @@ class DemoMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: const Text("Select a demo.")),
+        leading: SizedBox(width: 50),
+        title: const Center(child: const Text("Select a demo")),
         actions: [
           ThemeSwitcher(changeTheme: changeTheme, themeMode: themeMode)
         ],
