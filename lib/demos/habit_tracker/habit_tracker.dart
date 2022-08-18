@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fluttering/demos/habit_tracker/util/add_habit.dart';
 import 'package:fluttering/demos/habit_tracker/util/habit_tile.dart';
 
 class HabitTracker extends StatefulWidget {
@@ -50,15 +51,50 @@ class _HabitTrackerState extends State<HabitTracker> {
     }
   }
 
-  void settingsOpened(int index) {
+  void settingsOpened(int index, String action) {
     // habitList[index][1] = !habitList[index][1];
-    showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Settings for ${habitList[index][0]}"),
-          );
-        });
+    switch (action) {
+      case "delete":
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text("Delete ${habitList[index][0]}?"),
+                backgroundColor: Colors.grey[900],
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text("Cancel")),
+                  TextButton(
+                      onPressed: () {
+                        setState(() {
+                          habitList.removeAt(index);
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Text("Delete")),
+                ],
+              );
+            });
+        break;
+
+      case "edit":
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text(
+                  "edit coming soon",
+                  style: TextStyle(color: Colors.grey[900]),
+                ),
+                backgroundColor: Colors.white,
+              );
+            });
+        break;
+      default:
+    }
   }
 
   @override
@@ -67,10 +103,26 @@ class _HabitTrackerState extends State<HabitTracker> {
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         title: Center(child: Text("Habit Tracker")),
-        backgroundColor: Colors.grey,
+        backgroundColor: Colors.grey[900],
         actions: [
-          SizedBox(
-            width: 50,
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              showModalBottomSheet(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  backgroundColor: Colors.grey[200],
+                  context: context,
+                  builder: (context) {
+                    return Container(
+                      child: Card(
+                        color: Colors.grey[200],
+                        child: AddHabit(),
+                      ),
+                    );
+                  });
+            },
           )
         ],
       ),
@@ -85,8 +137,8 @@ class _HabitTrackerState extends State<HabitTracker> {
               onTap: () {
                 habitStarted(index);
               },
-              settingsTapped: () {
-                settingsOpened(index);
+              settingsTapped: (String action) {
+                settingsOpened(index, action);
               },
             );
           }),
