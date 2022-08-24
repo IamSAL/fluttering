@@ -14,7 +14,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State {
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.light;
   void changeTheme(ThemeMode themeMode) {
     setState(() {
       _themeMode = themeMode;
@@ -25,7 +25,7 @@ class _MyAppState extends State {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Fluttering',
-      theme: ThemeData(),
+      theme: ThemeData(primaryColor: Colors.purple[900]),
       darkTheme: ThemeData.dark(),
       themeMode: _themeMode,
       initialRoute: '/',

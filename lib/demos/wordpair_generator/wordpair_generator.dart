@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WordPairGenerator extends StatefulWidget {
   const WordPairGenerator({Key? key}) : super(key: key);
@@ -9,14 +11,45 @@ class WordPairGenerator extends StatefulWidget {
 }
 
 class WordPairGeneratorState extends State<WordPairGenerator> {
-  final _randomWordPairs = <WordPair>[];
-  final _savedWordPairs = Set<WordPair>();
+  final _randomWordPairs = <String>[];
+  Set _savedWordPairs = Set<String>();
 
-  Widget _buildRow(WordPair pair, int index) {
+  void _loadSavedList() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? savedListRaw = prefs.getString('savedWordPairs');
+
+    setState(() {
+      if (savedListRaw != null) {
+        _savedWordPairs = json.decode(savedListRaw).toSet();
+      } else {
+        _savedWordPairs = Set<String>();
+      }
+    });
+  }
+
+  void _saveList() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        'savedWordPairs', json.encode(_savedWordPairs.toList()));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedList();
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    _saveList();
+  }
+
+  Widget _buildRow(String pair, int index) {
     final isAlreadySaved = _savedWordPairs.contains(pair);
 
     return ListTile(
-      title: Text("${pair.asPascalCase}"),
+      title: Text("${pair}"),
       trailing: Icon(
         isAlreadySaved ? Icons.favorite : Icons.favorite_border,
         color: isAlreadySaved ? Colors.red : null,
@@ -43,7 +76,10 @@ class WordPairGeneratorState extends State<WordPairGenerator> {
 
           final index = item ~/ 2;
           if (index >= _randomWordPairs.length) {
-            _randomWordPairs.addAll(generateWordPairs().take(10));
+            _randomWordPairs.addAll(generateWordPairs()
+                .take(10)
+                .map((e) => e.asPascalCase)
+                .toSet());
           }
           return _buildRow(_randomWordPairs[index], index);
         });
@@ -52,22 +88,37 @@ class WordPairGeneratorState extends State<WordPairGenerator> {
   void _goToSavedPage() {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (BuildContext context) {
-        final Iterable<ListTile> tiles = _savedWordPairs.map((WordPair pair) {
-          return ListTile(
-            title: Text(pair.asPascalCase, style: TextStyle(fontSize: 16.0)),
+        void rebuildParent() {
+          setState(() {});
+        }
+
+        return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+          Iterable<ListTile> tiles = _savedWordPairs.map((dynamic pair) {
+            return ListTile(
+              title: Text(pair, style: TextStyle(fontSize: 16.0)),
+              trailing: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _savedWordPairs.remove(pair);
+                      rebuildParent();
+                    });
+                  },
+                  child: Icon(Icons.delete)),
+            );
+          });
+
+          final List<Widget> divided =
+              ListTile.divideTiles(context: context, tiles: tiles).toList();
+
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Saved WordPairs'),
+              backgroundColor: Colors.purple[900],
+            ),
+            body: ListView(children: divided),
           );
         });
-
-        final List<Widget> divided =
-            ListTile.divideTiles(context: context, tiles: tiles).toList();
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Saved WordPairs'),
-            backgroundColor: Colors.purple[900],
-          ),
-          body: ListView(children: divided),
-        );
       },
     ));
   }

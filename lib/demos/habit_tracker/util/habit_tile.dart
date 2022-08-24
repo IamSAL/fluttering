@@ -3,7 +3,7 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 
 typedef void CallbackWithAction(String action);
 
-class HabitTile extends StatelessWidget {
+class HabitTile extends StatefulWidget {
   final String habitName;
   final VoidCallback onTap;
   final CallbackWithAction settingsTapped;
@@ -21,8 +21,29 @@ class HabitTile extends StatelessWidget {
       required this.habitStarted})
       : super(key: key);
 
-//convert seconds to mins:62 seconds = 1:02 min
+  @override
+  State<HabitTile> createState() =>
+      _HabitTileState(onTap: onTap, habitStarted: habitStarted);
+}
 
+class _HabitTileState extends State<HabitTile> {
+  final VoidCallback onTap;
+  final bool habitStarted;
+
+  _HabitTileState({Key? key, required this.onTap, required this.habitStarted});
+
+  @override
+  void initState() {
+    print(habitStarted);
+    if (habitStarted) {
+      Future.delayed(Duration.zero, () async {
+        onTap();
+        onTap();
+      });
+    }
+  }
+
+//convert seconds to mins:62 seconds = 1:02 min
   String formatToMinSecString(int totalSeconds) {
     String secs = (totalSeconds % 60).toString();
     String mins = (totalSeconds / 60).toStringAsFixed(5);
@@ -38,11 +59,11 @@ class HabitTile extends StatelessWidget {
       mins = mins.substring(0, 1);
     }
 
-    return mins + ':' + secs;
+    return int.tryParse(mins).toString() + ':' + int.tryParse(secs).toString();
   }
 
   double percentCompleted() {
-    return timeSpent / (timeGoal * 60);
+    return widget.timeSpent / (widget.timeGoal * 60);
   }
 
   @override
@@ -63,7 +84,7 @@ class HabitTile extends StatelessWidget {
                 Row(
                   children: [
                     GestureDetector(
-                      onTap: onTap,
+                      onTap: widget.onTap,
                       child: SizedBox(
                         height: 60,
                         width: 60,
@@ -82,7 +103,9 @@ class HabitTile extends StatelessWidget {
                           //play pause button
                           Center(
                               child: Icon(
-                            habitStarted ? Icons.pause : Icons.play_arrow,
+                            widget.habitStarted
+                                ? Icons.pause
+                                : Icons.play_arrow,
                             color: Colors.grey[900],
                           )),
                         ]),
@@ -101,7 +124,7 @@ class HabitTile extends StatelessWidget {
                           children: [
                             //habit name
                             Text(
-                              habitName,
+                              widget.habitName,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -114,9 +137,9 @@ class HabitTile extends StatelessWidget {
                             ),
                             //progress
                             Text(
-                              formatToMinSecString(timeSpent) +
+                              formatToMinSecString(widget.timeSpent) +
                                   " / " +
-                                  timeGoal.toString() +
+                                  widget.timeGoal.toString() +
                                   " = " +
                                   (percentCompleted() * 100)
                                       .toStringAsFixed(0) +
@@ -129,7 +152,7 @@ class HabitTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                HabitSettingMenu(settingsTapped: settingsTapped)
+                HabitSettingMenu(settingsTapped: widget.settingsTapped)
               ],
             )),
       ),
